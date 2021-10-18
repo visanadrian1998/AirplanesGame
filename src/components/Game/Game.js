@@ -14,26 +14,25 @@ const Game = () => {
   };
   const history = useHistory();
   const [gameOver, setGameOver] = useState(false);
-  const [timePassed, setTimePassed] = useState(new Date().getTime());
-  const [numberRows, setNumberRows] = useState(getNumberRows());
-  const [airplaneIndex, setAirplaneIndex] = useState(
-    getAirplaneIndex(numberRows)
-  );
+  const numberRows = useRef(getNumberRows());
+  const timePassed = useRef(new Date().getTime());
+  const airplaneIndex = useRef(getAirplaneIndex(numberRows.current));
 
   const clickElement = (index, event) => {
     if (gameOver) return;
     if (numberTries.current.includes(index)) return;
     event.target.style.background = "#e75b2e";
     event.target.style.cursor = "default";
+    console.log(index, airplaneIndex, numberRows);
     numberTries.current.push(index);
-    if (index === airplaneIndex) {
+    if (index === airplaneIndex.current) {
       setGameOver(true);
       updateLocalStorage();
     }
   };
   const updateLocalStorage = () => {
     let localData = localStorage.getItem("results");
-    const duration = (new Date().getTime() - timePassed) / 1000;
+    const duration = (new Date().getTime() - timePassed.current) / 1000;
     localData = localData
       ? [
           ...JSON.parse(localData),
@@ -54,21 +53,21 @@ const Game = () => {
   };
   const playAgain = () => {
     setGameOver(false);
-    setTimePassed(new Date().getTime());
-    setNumberRows(getNumberRows());
-    setAirplaneIndex(numberRows);
+    numberRows.current = getNumberRows();
+    timePassed.current = new Date().getTime();
+    airplaneIndex.current = getAirplaneIndex(numberRows.current);
     numberTries.current = [];
   };
   let gridElements = [];
-  for (let i = 0; i < numberRows * numberRows; i++) {
+  for (let i = 0; i < numberRows.current * numberRows.current; i++) {
     gridElements.push({ index: i });
   }
 
   const AirplaneGrid = styled.div`
     display: grid;
     background-color: #2ecae7;
-    grid-template-rows: repeat(${numberRows}, 32px);
-    grid-template-columns: repeat(${numberRows}, 32px);
+    grid-template-rows: repeat(${numberRows.current}, 32px);
+    grid-template-columns: repeat(${numberRows.current}, 32px);
   `;
   const AirplaneGridDiv = styled.div`
     border: 1px solid white;
@@ -113,7 +112,6 @@ const Game = () => {
               {gridElements.map((element) => {
                 return (
                   <AirplaneGridDiv
-                    rows={numberRows}
                     key={element.index}
                     onClick={(event) => clickElement(element.index, event)}
                   ></AirplaneGridDiv>
